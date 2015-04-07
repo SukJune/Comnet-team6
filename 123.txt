@@ -1,0 +1,118 @@
+#include <iostream>
+using namespace std;
+
+
+class SparseMatrix;
+class terms
+{
+	friend SparseMatrix;
+	int col;
+	int row;
+	int value;
+};
+class SparseMatrix
+{
+private:
+	int origincol,originrow;
+	terms * nonzero;
+	terms * tempnonzero;
+	int * originMatrix;
+	int numofnonzero;
+
+public:
+	void newMatrix();
+	void makeSparseMatrix();
+	void printSparseMatrix();
+	void transSparseMatrix();
+	SparseMatrix()
+	{
+		numofnonzero=0;
+	}
+};
+void SparseMatrix::newMatrix()
+{
+	int i,j;
+
+	cout<<"행렬의 행과 열을 입력하세요";
+	cin>>originrow>>origincol;
+	originMatrix = new int[origincol*originrow];
+
+	for(i=0;i<originrow;i++)
+	{
+		cout<<i<<"행의 값을 입력하세요";
+		for(j=0;j<origincol;j++)
+		{
+			cin>>*(originMatrix+(i*origincol+j));
+			if(*(originMatrix+(i*origincol+j))!=0)
+				numofnonzero++;
+		}
+		
+	}
+	makeSparseMatrix();
+}
+void SparseMatrix::makeSparseMatrix()
+{
+	int i,j;
+	int index=0;
+	nonzero = new terms[numofnonzero];
+	tempnonzero = new terms[numofnonzero];
+	for(i=0;i<originrow;i++)
+		for(j=0;j<origincol;j++)
+			if(*(originMatrix+(i*origincol+j))!=0)
+			{
+				nonzero[index].col=j;
+				nonzero[index].row=i;
+				nonzero[index].value=*(originMatrix+(i*origincol+j));
+				index++;
+			}
+}
+void SparseMatrix::printSparseMatrix()
+{
+	int i;
+	cout<<"[행] [열] [값]"<<endl;
+	for(i=0;i<numofnonzero;i++)
+		cout<<" "<<nonzero[i].row<<"    "<<nonzero[i].col<<"    "<<nonzero[i].value<<endl;
+}
+void SparseMatrix::transSparseMatrix()
+{
+	int * rowsize;
+	int * rowstart;
+	int i,j,temp;
+
+	rowsize=new int[origincol];
+	rowstart=new int[origincol];
+	memset(rowsize,0,sizeof(int)*origincol);
+	memset(rowstart,0,sizeof(int)*origincol);
+
+	for(i=0;i<origincol;i++)
+		rowsize[nonzero[i].col]++;
+
+	for(i=1;i<origincol;i++)
+		rowstart[i]=rowstart[i-1]+rowstart[i-1];
+
+	for(i=0;i<origincol;i++)
+	{
+		tempnonzero[rowstart[nonzero[i].col]].row = nonzero[i].col; 
+		tempnonzero[rowstart[nonzero[i].col]].col = nonzero[i].row;
+		tempnonzero[rowstart[nonzero[i].col]].value = nonzero[i].value;
+		rowstart[nonzero[i].col]++;
+	}
+
+	delete nonzero;
+	nonzero = tempnonzero;
+}
+
+
+/////////
+
+#include "Sparsematrix.h"
+
+
+void main()
+{
+	SparseMatrix s1;
+	s1.newMatrix();
+	s1.printSparseMatrix();
+	s1.transSparseMatrix();
+	s1.printSparseMatrix();
+}
