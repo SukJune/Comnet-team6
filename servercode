@@ -1,7 +1,28 @@
-# Tcp Chat server
+# user class
+class User:
+    userIDPW='';
+    loginstate=0;
+
+    def login(recdata):
+        if userIDPW==recdata:
+            self.loginstate=1;
+            return 1;
+        else:
+            self.loginstate=0;
+            return 0;
+
+    def setUSERIDPW(IDPW):
+        userIDPW==IDPW;
+
+#class ChattingRoom:
  
 import socket, select
- 
+
+#유저생성
+user1=User();
+user1.setUSERIDPW("ID:testuser;PW:1234;");
+
+# Tcp Chat server
 #Function to broadcast chat messages to all connected clients
 def broadcast_data (sock, message):
     #Do not send the message to master socket and the client who has send us the message
@@ -19,12 +40,12 @@ if __name__ == "__main__":
     # List to keep track of socket descriptors
     CONNECTION_LIST = []
     RECV_BUFFER = 4096 # Advisable to keep it as an exponent of 2
-    PORT = 5123
+    PORT = 9999
      
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # this has no effect, why ?
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(("0.0.0.0", PORT))
+    server_socket.bind(("localhost", PORT))
     server_socket.listen(10)
  
     # Add server socket to the list of readable connections
@@ -52,8 +73,17 @@ if __name__ == "__main__":
                 try:
                     #In Windows, sometimes when a TCP program closes abruptly,
                     # a "Connection reset by peer" exception will be thrown
+                    #login
                     data = sock.recv(RECV_BUFFER)
                     if data:
+                        if (data[0]=='I')&&(data[1]=='D')&&(data[2]==':'):
+                            if user1.login(data):
+                                sock.send("LG:SUCCESS;");
+                            else
+                                sock.send("LG:FAIL");
+                        else if (data[0]=='L')&&(data[1]=='G')&&(data[2]==':'):
+                            user1.login(data);
+                    
                         broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '> ' + data)               
                  
                 except:
