@@ -1,26 +1,37 @@
+import socket, select
 # user class
 class User:
     userIDPW='';
     loginstate=0;
-
-    def login(recdata):
-        if userIDPW==recdata:
-            self.loginstate=1;
-            return 1;
-        else:
-            self.loginstate=0;
-            return 0;
-
-    def setUSERIDPW(IDPW):
-        userIDPW==IDPW;
-
-#class ChattingRoom:
- 
-import socket, select
+    chatrnum=0;
+    useraddr = None;
+    def setaddr(self, t_addr):
+        self.useraddr = t_addr;
+    def login(self,redata,tt_addr):
+	    if self.userIDPW==redata:
+		    self.loginstate=1;
+		    self.setaddr(tt_addr);
+		    return 1;
+	    else:
+		    self.loginstate=0;
+		    return 0;
+    def __init__(self, IDPW = None):
+	    self.userIDPW = IDPW;
+    
+class ChattingRoom:
+    chating_user_list=[];
+    chatrnum=0;
+    def __init__(self, num = None):
+	    self.chatrnum = num;
 
 #유저생성
-user1=User();
-user1.setUSERIDPW("ID:testuser;PW:1234;");
+i = 1;
+user_list = []
+chatroom_list = []
+user_list.append(User('ID:user1;PW:12;'))
+user_list.append(User('ID:user2;PW:34;'))
+user_list.append(User('ID:user3;PW:56;'))
+user_list.append(User('ID:user4;PW:78;'))
 
 # Tcp Chat server
 #Function to broadcast chat messages to all connected clients
@@ -76,14 +87,25 @@ if __name__ == "__main__":
                     #login
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        if (data[0]=='I')&&(data[1]=='D')&&(data[2]==':'):
-                            if user1.login(data):
-                                sock.send("LG:SUCCESS;");
-                            else
-                                sock.send("LG:FAIL");
-                        else if (data[0]=='L')&&(data[1]=='G')&&(data[2]==':'):
-                            user1.login(data);
-                    
+                        if (data[0]=='I') and (data[1]=='D') and (data[2]==':'):
+                            j = False
+                            for temp in user_list:
+                                if(temp.login(data,addr)==1):
+                                    j = True
+                                    sock.send('LG:SUCCESS;')
+                                    break;
+                            if (j == False):
+                                sock.send('LG:FAIL;')
+
+                        else if (data[0]=='C')and(data[1]=='C')and(data[2]==':'):
+                            
+                        else if (data[0]=='C')and(data[1]=='H')and(data[2]==':'):
+                        else if (data[0]=='M')and(data[1]=='S')and(data[2]==':'):
+                        else if (data[0]=='O')and(data[1]=='U')and(data[2]=='T'):
+                            for temp in user_list:
+                                if(temp.useraddr == addr):
+                                    
+                        else if (data[0]=='L')and(data[1]=='G')and(data[2]==':'):
                         broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '> ' + data)               
                  
                 except:
