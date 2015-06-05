@@ -1,0 +1,127 @@
+# -*- coding: utf8 -*-
+ 
+# socket 모듈을 임포트
+from socket import *
+import sys
+immport 
+ 
+ 
+# 호스트, 포트와 버퍼 사이즈를 지정
+HOST = '127.0.0.1'
+PORT = 56789
+BUFSIZE = 1024
+ADDR = (HOST, PORT)
+sel = 0
+r_number = 0
+ 
+def count_room():      #채팅목록 갯수 확인
+    count = clientSocket.recv(30)
+    if count:
+        if (count[0]=='C')&&(count[1]=='H')&&(count[2]==':'):
+            i=3
+            while count[i] != ';':
+                temp += (""+count[i])
+                i++
+            number = int(temp)
+    for i in range(1,number+1):
+        chatpeople[i] = clientSocket.recv(256)
+        print i
+        print chatpeople[i]
+def select_room():      #채팅방 선택
+    print '참가할 방의 번호를 입력하시오'
+    r_number = input()
+    sel = 'CH:'+sel+';'
+    clientSocket.send(sel)
+    rev = clientSocket.recv(30)
+    if rev = 'ok':
+        i = 0
+        sen_num = clientSocket.recv(30)
+        while sen_num != i:     #받는족족 출력
+            if temp == 'LAST':
+                i = sen_num
+            else:                
+                i++
+                temp = clientSocket.recv(1124)
+                print temp
+     else:
+         print '그런 방없다...'
+         return select_room()
+
+     return r_number
+    
+#ing...def room_exit():
+#ing...    clientSocket.send       #리턴값받아서 사용할것.!
+def room_made():
+    print'얼마만큼 초대할거얔ㅋ'
+    in_number = input()
+
+    for i in range(0,in_person):
+        print'상대방의 id를 입력하시오'
+        in_user = input()
+        in_user = 'CI:'+in_user+';'
+        clientSocket.send(in_user)
+def systemout():
+    clientSocket.send('LG:OUT;')
+def prompt():
+    sys.stdout.write('<나>')
+    sys.stdout.flush()
+ 
+def receive():
+    try:
+        connection_list = [sys.stdin, clientSocket]
+        read_socket = connection_list
+        write_socket = 10
+        error_socket = 10
+
+        for sock in read_socket:
+            data = sock.recv(BUFSIZE)
+            if not data:
+                continue
+            else:
+                print('%s' % data)  # 메세지 시간은 서버 시간을 따른다
+                del data
+
+    except KeyboardInterrupt:
+        clientSocket.close()
+        sys.exit()
+def sending():
+    message = input()
+    clientSocket.send(message)
+
+# 소켓 객체를 만들고
+while sel ==0:
+        clientSocket = socket(AF_INET, SOCK_STREAM)
+     
+    # 로그인  시도
+        try:
+            while(len(id_)>32 or len(password_)>32):
+                print'id와 password를 입력하시오(길이제한 각각32byte) : '
+                id_ = sys.stdin.readline()
+                password_ = sys.stdin.readline()
+            lgstr = 'ID:'+id_+';'+'PW:'+pw_+';'
+            clientSocket.connect(ADDR)
+            clientSocket.send(lgstr)
+            res=clientSocket.recv(100)
+            if res == 'LG:SUCCESS;':
+                print 'ok'
+                sel = 1
+            else:
+                print 'LG:FAIL;'
+                sel = 0
+                clientSocket.close()
+                print'wrong access. try again!'
+                
+        except Exception as e:                  #예외에 왜 걸리지;;?
+            print('채팅 서버(%s:%s)에 연결 할 수 없습니다.' % ADDR)
+            sys.exit()
+
+# ing.....            
+count_romm()
+r_number = select_room()
+print('채팅 서버(%s:%s)에 연결 되었습니다.' % ADDR)
+
+
+     
+
+
+
