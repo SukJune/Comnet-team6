@@ -2,9 +2,18 @@ import socket, select
  # user class
 class User:
     userIDPW='';
+    userID='';
     loginstate=0;
     chatrnum=0;
     useraddr = None;
+    def find_id(self):
+        for i in range(0,len(self.userIDPW)):
+            if(self.userIDPW[i]!=';'):
+                self.userID+=self.userIDPW[i];
+            else:
+                break;
+    def __init__(self, IDPW = None):
+	    self.userIDPW = IDPW;
     def setaddr(self, t_addr):
         self.useraddr = t_addr;
     def login(self,redata,tt_addr):
@@ -15,14 +24,18 @@ class User:
 	    else:
 		    self.loginstate=0;
 		    return 0;
-    def __init__(self, IDPW = None):
-	    self.userIDPW = IDPW;
+
 class ChattingRoom:
     chating_user_list=[];
     chatrnum=0;
     def __init__(self, num = None):
 	    self.chatrnum = num;
-
+    def find_user(self, userid):
+        for user in self.chatting_user_list:
+            if user == userid:
+                return True;
+            else
+                return False;
 #유저생성
 i = 0;
 user_list = []
@@ -91,6 +104,15 @@ if __name__ == "__main__":
                                 if(temp.login(data,addr)==1):
                                     j = True
                                     sock.send('LG:SUCCESS;')
+                                    chatroomsize=0;
+                                    for chat in chatroom_list:
+                                        if chat.find_user(temp.userID):
+                                            chatroomsize++;
+                                    #send chatting room number
+                                        sock.send('CH:'+str(chatroomsize));
+                                    for chat in chatroom_list:
+                                        if chat.find_user(temp.userID):
+                                            sock.send('CN:'+str(chat.chatrnum));
                                     break;
                             if (j == False):
                                 sock.send('LG:FAIL;')
@@ -117,10 +139,20 @@ if __name__ == "__main__":
                                         
                                 
                         else if (data[0]=='M')and(data[1]=='S')and(data[2]==':'):
+                        #out chatroom
                         else if (data[0]=='O')and(data[1]=='U')and(data[2]=='T'):
                             for temp in user_list:
                                 if(temp.useraddr == addr):
-                                    user_temp = temp
+                                    chatroomsize=0;
+                                    for chat in chatroom_list:
+                                        if chat.find_user(temp.userID):
+                                            chatroomsize++;
+                                    #send chatting room number
+                                        sock.send('CH:'+str(chatroomsize));
+                                    for chat in chatroom_list:
+                                        if chat.find_user(temp.userID):
+                                            sock.send('CN:'+str(chat.chatrnum));
+
                         else if (data[0]=='L')and(data[1]=='G')and(data[2]==':'):
                         broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '> ' + data)               
                  
