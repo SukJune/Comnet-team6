@@ -235,15 +235,14 @@ if __name__ == "__main__":
                             chat_num = int(temp_data)
                             for temp in user_list:
                                 if(temp.usersock == sock):
-                                    print('if')
                                     user_temp = temp
                             try:
-                                print('try')
+                                sock.send('ok')
+                                time.sleep(0.3)
                                 chatroom_list[chat_num-1].message_join(sock)
                                 print('join')
                                 user_temp.chatrnum = chat_num
-                                sock.send('ok')
-                                time.sleep(0.3)
+                                
                             except:
                                 sock.send('no')
                                 time.sleep(0.3)
