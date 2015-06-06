@@ -1,9 +1,9 @@
-import socket, select
+import socket, select, time
 #유저생성
-i = 0;
+i = 1;
 user_list = []
 chatroom_list = []
- # user class
+
 class User:
     userIDPW='';
     userID='';
@@ -11,73 +11,88 @@ class User:
     chatrnum=0;
     usersock = None;
     def find_id(self):
-        for i in range(0,len(self.userIDPW)):
+        for i in range(3,len(self.userIDPW)):
             if(self.userIDPW[i]!=';'):
                 self.userID+=self.userIDPW[i];
             else:
                 break;
     def __init__(self, IDPW = None):
-	    self.userIDPW = IDPW;
+       self.userIDPW = IDPW;
+       self.find_id()
+       print ("create user : " + self.userID)
     def setsock(self, sockf):
         self.usersock = sockf;
     def login(self,redata,sockfd):
-	    if self.userIDPW==redata:
-		    self.loginstate=1;
-		    self.setsock(sockfd);
-		    return 1;
-	    else:
-		    self.loginstate=0;
-		    return 0;
+       if self.userIDPW==redata:
+          self.loginstate=1;
+          self.setsock(sockfd);
+          return 1;
+       else:
+          self.loginstate=0;
+          return 0;
 user_list.append(User('ID:user1;PW:12;'))
 user_list.append(User('ID:user2;PW:34;'))
 user_list.append(User('ID:user3;PW:56;'))
 user_list.append(User('ID:user4;PW:78;'))
-class Message:
-    data=''
+
 class ChattingRoom:
     chating_user_list=[];
     chatrnum=0;
     message_list=[]
-    def __init__(self, num = None):
-	    self.chatrnum = num;
+    def find_userclass(self, userid):
+        for user in user_list:
+            if user.userID == userid:
+                return user;
     def find_user(self, userid):
-        for user in self.chatting_user_list:
+        for user in self.chating_user_list:
             if user == userid:
-                return True;
-            else:
-                return False;
-    def message_s(self,data):
-        message_list.append(Message(data,self.chatroomnum))
-    def message_join(self,n_sock):
-        for t_message in message_list:
-            try:
-                n_sock.send(t_message)
-            except :
-                # broken socket connection may be, chat client pressed ctrl+c for example
-                n_sock.close()
-                CONNECTION_LIST.remove(n_sock)
-class Message:
-    data=''
-    def __init__(self,message,chatrnum):
+                return 1;
+    def message(self,message):
         temp_user=None
         for temp in user_list:
             if(temp.usersock == sock):
                 temp_user = temp.userID
                 break
         #save message
-        tempms =''
+        tempms1 =''
         for temp in range(0,len(message)-1):
-             tempms += data[temp]
-             if data[temp]==';':
+            tempms1 += message[temp]
+            if message[temp]==';':
                 break
-        data = tempms + temp_user + str(chatrnum)       
-        self.data = message
-        for user in chatroom_list[chatrnum-1].chating_user_list:
-             if user.loginstate ==1 and user.chatrnum == chatrnum:
-                 user.usersock.send(message)
+        message = tempms1 + temp_user + str(self.chatrnum)
+        self.message_list.append(message)
+        print("message append")
+        for user in self.chating_user_list:
+            print("seek user")
+            USER = self.find_userclass(user)
+            if USER.loginstate ==1 and USER.chatrnum == self.chatrnum:
+                print("seek chatrnum")
+                try:
+                    USER.usersock.send(message)
+                except:
+                    print("close" + USER.userID)
+                    USER.usersock.close()
+                    CONECTIONLIST.remove(usersock)
+        return message
+    def __init__(self, num = None):
+       self.chatrnum = num; 
+    def message_join(self,n_sock):
+        for t_message in self.message_list:
+            try:
+                n_sock.send(t_message)
+            except :
+                # broken socket connection may be, chat client pressed ctrl+c for example
+                n_sock.close()
+                CONNECTION_LIST.remove(n_sock)
 # Tcp Chat server
 #Function to broadcast chat messages to all connected clients
- 
+print ("create chatroom")
+chatroom_list.append(ChattingRoom(1))
+chatroom_list[0].chating_user_list.append('user1')
+chatroom_list[0].chating_user_list.append('user2')
+chatroom_list[0].chating_user_list.append('user3')
+chatroom_list[0].chating_user_list.append('user4')
+print (chatroom_list[0].chating_user_list)
 if __name__ == "__main__":
      
     # List to keep track of socket descriptors
@@ -88,7 +103,7 @@ if __name__ == "__main__":
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # this has no effect, why ?
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(("0.0.0.0", PORT))
+    server_socket.bind(('', PORT))
     server_socket.listen(10)
  
     # Add server socket to the list of readable connections
@@ -107,8 +122,7 @@ if __name__ == "__main__":
                 sockfd, addr = server_socket.accept()
                 CONNECTION_LIST.append(sockfd)
                 print ("Client (%s, %s) connected" % addr)
-                 
-                broadcast_data(sockfd, "[%s:%s] entered room\n" % addr)
+                
              
             #Some incoming message from a client
             else:
@@ -125,32 +139,40 @@ if __name__ == "__main__":
                                 if(temp.login(data,sock)==1):
                                     j = True
                                     sock.send('LG:SUCCESS;')
+                                    time.sleep(0.3)
                                     chatroomsize=0;
                                     for chat in chatroom_list:
+                                        print ('open chatroom')
                                         if chat.find_user(temp.userID):
                                             chatroomsize += 1
+                                            print ('found number 0f chatroom')
                                     #send chatting room number
-                                        try:
-                                            sock.send('CH:'+str(chatroomsize));
-                                        except :
+                                    try:
+                                        print ('try send number of chatroom')
+                                        sock.send('CH:'+str(chatroomsize) +';');
+                                        time.sleep(0.3)
+                                    except :
                                          # broken socket connection may be, chat client pressed ctrl+c for example
-                                            sock.close()
-                                            CONNECTION_LIST.remove(sock)  
+                                        sock.close()
+                                        CONNECTION_LIST.remove(sock)  
                                     for chat in chatroom_list:
                                         if chat.find_user(temp.userID):
                                             try:
-                                                sock.send('CN:'+str(chat.chatrnum));
+                                                sock.send('CN:'+str(chat.chatrnum) + ';')
+                                                time.sleep(0.3)
                                             except :
                                             # broken socket connection may be, chat client pressed ctrl+c for example
                                                 sock.close()
                                                 CONNECTION_LIST.remove(sock)  
                                     break;
-                            if (j == False):
+                            if j==False:
                                 sock.send('LG:FAIL;')
+                                time.sleep(0.3)
                         #create_chattingroom
                         if (data[0]=='C')and(data[1]=='C')and(data[2]==':'):
                             i += 1
                             chatroom_list.append(ChattingRoom(i))
+                            print ("create chatroom")
                             for temp in user_list:
                                 if(temp.usersock == sock):
                                     user_temp = temp
@@ -168,6 +190,7 @@ if __name__ == "__main__":
                                             break
 
                         if (data[0]=='M')and(data[1]=='S')and(data[2]==':'):
+                            print(data)
                             tempms =''
                             j=None
                             for temp in range(3,len(data)):
@@ -176,8 +199,10 @@ if __name__ == "__main__":
                                     break
                             for temp in range(j+1,len(data)-1):
                                 tempms += data[temp]
-                            j = int(tempms)
-                            chatroom_list[j-1].message_s(data)
+                            print ('massage for chatroom '+tempms)
+                            chatroomt = chatroom_list[int(tempms)-1]
+                            chatroomt.message_list.append(chatroomt.message(data))
+                            print("send : "+ data)
                             
                                 
                         #out chatroom
@@ -210,9 +235,19 @@ if __name__ == "__main__":
                             chat_num = int(temp_data)
                             for temp in user_list:
                                 if(temp.usersock == sock):
+                                    print('if')
                                     user_temp = temp
-                            user_temp.chatrnum = chat_num
-                            chatroom_list[chat_num-1].message_join(sock)
+                            try:
+                                print('try')
+                                chatroom_list[chat_num-1].message_join(sock)
+                                print('join')
+                                user_temp.chatrnum = chat_num
+                                sock.send('ok')
+                                time.sleep(0.3)
+                            except:
+                                sock.send('no')
+                                time.sleep(0.3)
+                            
                             
                         if (data[0]=='L')and(data[1]=='G')and(data[2]==':'):
                              for temp in user_list:
@@ -225,6 +260,7 @@ if __name__ == "__main__":
                              CONECTION_LIST.remove(sock)
                  
                 except:
+                    print ("close")
                     sock.close()
                     CONNECTION_LIST.remove(sock)
                     continue
