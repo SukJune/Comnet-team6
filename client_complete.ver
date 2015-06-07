@@ -1,0 +1,195 @@
+
+#team 6 fighting
+ 
+
+import threading
+from socket import *
+import sys
+import time
+import select
+import errno
+
+HOST = '192.168.1.12'
+PORT = 5123
+
+BUFSIZE = 1024
+ADDR = (HOST, PORT)
+tmqjf = 0
+r_number = 0
+message = ''
+CONNECTION_LIST=[]
+
+def count_room():      
+    chatpeople = []
+    number = 0
+    time.sleep(0.2)
+    count = clientSocket.recv(30)
+    print count
+    if count:
+        if (count[0]=='C')&(count[1]=='H')&(count[2]==':'):
+            i=3
+            temp = ''
+            while count[i] != ';':
+                temp += (""+count[i])
+                i=i+1
+            number = int(temp)
+    for i in range(1,number+1):
+        chatpeople.append ( clientSocket.recv(256))
+        print i
+        print chatpeople[i-1]
+def select_room():     
+    print 'input room_number, then you can access'
+    global r_number
+    r_number = input()
+    send_number = 'CH:'+str(r_number)+';'
+    clientSocket.send(send_number)
+    time.sleep(0.1)
+    rev = clientSocket.recv(30)
+    if rev == 'ok':
+        print ('entered chatingroom NO.' + str(r_number))
+        time.sleep(0.4)
+    else:
+         print 'Not found chattingroom'
+         return select_room()    
+    return r_number
+    
+#ing...def room_exit():
+#ing...    clientSocket.send      
+def room_made():
+    print'input number of chat_member : '
+    in_number = input()
+
+    for i in range(0,in_number):
+        print'input id (invite)'
+        in_user = raw_input()
+        in_user = 'CI:'+in_user+';'
+        clientSocket.send(in_user)
+def systemout():
+    clientSocket.send('LG:OUT;')
+def prompt():
+    sys.stdout.write('<me>')
+    sys.stdout.flush()
+
+def recv_send():
+    global message
+    global data
+    try:
+        connection_list = [sys.stdin, clientSocket]
+        read_socket = connection_list
+        write_socket = 10
+        error_socket = 10
+        for sock in read_sockets:
+            try:
+                data=clientSocket.recv(1024)
+            except socket.error, e:
+                if e.args[0] == errno.EWOULDBLOCK: 
+                    print 'EWOULDBLOCK'
+                    time.sleep(1)           # short delay, no tight loops
+                else:
+                    print e
+                    break
+            if data:
+                while data!='':
+                    i=0
+                    data=data[3:]
+                    while data[i] != ';':
+                        i=i+1
+                    write_temp=data[0:i]
+                    data=data[i+1:]
+                    i=0   
+                    while data[i] != ';':
+                        i=i+1
+                    user_temp=data[0:i]
+                    data=data[i+1:]
+                    i=0
+                    while data[i] != ';':
+                        i=i+1
+                    roomstr=data[0:i]
+                    data=data[i+1:]
+                    message_temp='[ '+user_temp+'(Room.'+roomstr+')'+' ]'+write_temp
+                    print message_temp
+
+    except :
+        data = data
+    message=raw_input('[ chat ] : ')
+    if message:
+        if message=='outroom':
+            print 'out the chattingroom'
+            clientSocket.send('OUT:%d;'%r_number)
+            
+        elif message=='lgout':
+            print 'Logout'
+            clientSocket.send('LG:OUT;')
+        else:
+            clientSocket.send('MS:'+message+';'+str(r_number)+';')
+    
+    
+
+    
+    
+def master():
+    count_room()
+    print 'enter chatting_room : 1, create chatting_room : 2'
+    option=input()
+    if option==1:
+        r_number = select_room()
+    elif option==2:
+        room_made()
+    else:
+        print 'you can imput 1 or 2'
+
+    
+        
+
+data=''
+while tmqjf ==0:
+        print('please wait......')
+        clientSocket = socket(AF_INET, SOCK_STREAM)
+        CONNECTION_LIST.append(clientSocket)
+     
+    
+        try:
+            clientSocket.connect(ADDR)
+            clientSocket.send('')
+            print 'you can login now'
+            id_ = raw_input('id : ')
+            password_ = raw_input('pw : ')
+    
+            while(len(id_)>32 or len(password_)>32):
+                print'you can`t input longer than 32bytes each id, password'
+                print 'login again'
+                id_ = raw_input('id : ')
+                password_ = raw_input('pw : ')
+            lgstr = 'ID:'+id_+';'+'PW:'+password_+';'
+            clientSocket.send(lgstr)
+            time.sleep(0.1)
+            res=clientSocket.recv(100)
+            if res == 'LG:SUCCESS;':
+                print 'login success'
+                tmqjf = 1
+            else:
+                print 'login fail'
+                tmqjf = 0
+                clientSocket.close()
+                print'wrong access. try again!'
+           
+           
+                
+        except Exception as e:                  
+            print('can`t not access server address (%s:%s)' % ADDR)
+            time.sleep(1)
+            continue
+            
+
+# ing…..
+while True:
+    master()
+    clientSocket.setblocking(0)
+    while message!='outroom':
+        read_sockets = CONNECTION_LIST
+        recv_send()
+        time.sleep(0.2)
+
+
+while True:
+   time.sleep(0.1)
